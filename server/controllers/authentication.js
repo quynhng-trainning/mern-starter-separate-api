@@ -3,7 +3,8 @@
 const jwt = require('jsonwebtoken'),
     crypto = require('crypto'),
     User = require('../models/user'),
-    config = require('../config/main');
+    config = require('../config/main'),
+    help = require('../util/functions/helper');
 
 
 function generateToken(user) {
@@ -13,23 +14,12 @@ function generateToken(user) {
 }
 
 
-// Set user info from request
-function setUserInfo(request) {
-    return {
-        _id: request._id,
-        firstName: request.profile.firstName,
-        lastName: request.profile.lastName,
-        email: request.email,
-        role: request.role
-    };
-}
-
 //========================================
 // Login Route
 //========================================
 exports.login = function(req, res, next) {
 
-    let userInfo = setUserInfo(req.user);
+    let userInfo = help.getUserInfo(req.user);
 
     res.status(200).json({
         token: 'JWT ' + generateToken(userInfo),
@@ -85,7 +75,7 @@ exports.register = function(req, res, next) {
 
             // Respond with JWT if user was created
 
-            let userInfo = setUserInfo(user);
+            let userInfo = help.getUserInfo(req.user);
 
             res.status(201).json({
                 token: 'JWT ' + generateToken(userInfo),
@@ -112,11 +102,14 @@ exports.roleAuthorization = function(role) {
             }
 
             // If user is found, check role.
-            if (foundUser.role == role) {
+            if (help.getRole(foundUser.role) >= help.getRole(role)) {
                 return next();
             }
+            // if (foundUser.role == role) {
+            //     return next();
+            // }
 
-            res.status(401).json({ error: 'You are not authorized to view this content.' });
+            res.status(401).json({ error: 'You are not authorized to access this content. Please using the user with ' + role + ' role.' });
             return next('Unauthorized');
         })
     }

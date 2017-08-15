@@ -3,7 +3,8 @@
 const AuthenticationController = require('./controllers/authentication'),
     express = require('express'),
     passportService = require('./config/passport'),
-    passport = require('passport');
+    passport = require('passport'),
+    constantRole = require('./util/constants/role');
 
 
 // Middleware to require login/auth
@@ -36,7 +37,7 @@ module.exports = function(app) {
     taskRoutes.post('', requireAuth, taskController.create);
     taskRoutes.get('/:taskId', requireAuth, taskController.findById);
     taskRoutes.put('/:taskId', requireAuth, taskController.update);
-    taskRoutes.delete('/:taskId', requireAuth, taskController.delete);
+    taskRoutes.delete('/:taskId', requireAuth, AuthenticationController.roleAuthorization(constantRole.ROLE_ADMIN), taskController.delete);
 
     // Set url for API group routes
     app.use('/api', apiRoutes);
